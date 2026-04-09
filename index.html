@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eye Chart — Visual Acuity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inconsolata:wght@400;700&family=Special+Elite&family=Share+Tech+Mono&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+
+    /* ── Reset ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens ────────────────────────────── */
+    :root {
+      --ink:            #1A1A18;
+      --paper:          #F9F7F4;
+      --chrome-bg:      #131311;
+      --chrome-surface: #1E1E1C;
+      --chrome-border:  #2E2E2C;
+      --chrome-text:    #C8C8C4;
+      --chrome-muted:   #606060;
+    }
+
+    /* ── Body ──────────────────────────────── */
+    body {
+      background: #282826;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Controls (screen only) ────────────── */
+    .controls {
+      background: var(--chrome-bg);
+      border-bottom: 1px solid var(--chrome-border);
+      padding: 18px 24px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .controls-inner {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+
+    .controls-eyebrow {
+      display: block;
+      color: var(--chrome-muted);
+      font-size: 8.5px;
+      font-weight: 500;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      max-height: 180px;
+      background: var(--chrome-surface);
+      color: var(--chrome-text);
+      border: 1px solid var(--chrome-border);
+      padding: 10px 12px;
+      font-family: 'Courier Prime', Courier, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+    }
+
+    textarea:focus { border-color: #484846; }
+
+    textarea::placeholder { color: var(--chrome-muted); }
+
+    .control-bar {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 9px;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .control-group label {
+      color: var(--chrome-muted);
+      font-size: 8.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--chrome-surface)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23606060'/%3E%3C/svg%3E")
+        no-repeat right 9px center;
+      color: var(--chrome-text);
+      border: 1px solid var(--chrome-border);
+      padding: 5px 28px 5px 9px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .btn-print {
+      margin-left: auto;
+      background: var(--paper);
+      color: var(--ink);
+      border: none;
+      padding: 7px 16px;
+      font-family: inherit;
+      font-size: 8.5px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.12s;
+    }
+
+    .btn-print:hover { opacity: 0.78; }
+
+    /* ── Output wrapper ────────────────────── */
+    #output {
+      padding: 44px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+    }
+
+    #output.is-empty::after {
+      content: 'Paste a narrative above to generate the chart.';
+      display: block;
+      color: #3A3A38;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-top: 72px;
+    }
+
+    /* ── Chart page ────────────────────────── */
+    .chart-page {
+      width: 816px;     /* 8.5 in @ 96 dpi */
+      min-height: 1056px; /* 11 in @ 96 dpi */
+      background: var(--paper);
+      padding: 72px;    /* 0.75 in @ 96 dpi */
+      box-shadow: 0 6px 48px rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .chart-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24pt;
+    }
+
+    .chart-rule {
+      flex: 1;
+      height: 0.5px;
+      background: var(--ink);
+      opacity: 0.2;
+    }
+
+    .chart-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 6pt;
+      font-weight: 500;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--ink);
+      opacity: 0.3;
+      white-space: nowrap;
+      padding-right: 0.5em; /* offset letter-spacing on last char */
+    }
+
+    /* Rows */
+    .chart-rows {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Single-line rows */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 42pt 1fr 42pt;
+      align-items: baseline;
+      padding: 3pt 0;
+      border-top: 0.25pt solid rgba(26,26,24,0.07);
+    }
+
+    .chart-row:last-child {
+      border-bottom: 0.25pt solid rgba(26,26,24,0.07);
+    }
+
+    .acuity {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 6pt;
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      opacity: 0.32;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .acuity-l { text-align: right; padding-right: 9pt; }
+    .acuity-r { text-align: left;  padding-left: 9pt;  }
+
+    .chart-text {
+      display: block;
+      text-align: center;
+      color: var(--ink);
+      line-height: 1.1;
+      letter-spacing: 0.1em;
+      padding-right: 0.1em; /* optical offset */
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* Paragraph row — last row */
+    .chart-row--para {
+      display: grid;
+      grid-template-columns: 42pt 1fr 42pt;
+      align-items: start;
+      padding: 8pt 0 0;
+      margin-top: 6pt;
+      border-top: 0.5pt solid rgba(26,26,24,0.15);
+    }
+
+    .chart-para {
+      display: block;
+      text-align: justify;
+      color: var(--ink);
+      font-size: 8pt;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      hyphens: auto;
+      overflow-wrap: break-word;
+    }
+
+    /* ── Print ─────────────────────────────── */
+    @media print {
+      .no-print { display: none !important; }
+
+      body { background: white; }
+
+      #output {
+        padding: 0;
+        gap: 0;
+      }
+
+      .chart-page {
+        width: 100%;
+        min-height: unset;
+        padding: 0;
+        box-shadow: none;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .chart-page:last-child {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      @page {
+        size: letter portrait;
+        margin: 0.75in;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ── Controls ─────────────────────────────────────── -->
+<div class="controls no-print">
+  <div class="controls-inner">
+    <span class="controls-eyebrow">Eye Chart — Narrative to Visual Acuity</span>
+    <textarea
+      id="narrative"
+      placeholder="Paste your narrative here. Characters flow from the largest line down; the remaining text becomes the final paragraph."
+      spellcheck="false"
+      lang="en"
+    ></textarea>
+    <div class="control-bar">
+      <div class="control-group">
+        <label for="fontSelect">Typeface</label>
+        <select id="fontSelect"></select>
+      </div>
+      <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chart output ──────────────────────────────────── -->
+<div id="output" class="is-empty"></div>
+
+<script>
+'use strict';
+
+/* ── Chart structure ──────────────────────────────────
+   Rows 1–11: single centered lines (increasing char count)
+   Final row:  paragraph — all remaining text at fine-print scale
+───────────────────────────────────────────────────── */
+
+const LINE_ROWS = [
+  { chars:  1, acuity: '20/200', metric: '6/60'   , size: 72   },
+  { chars:  2, acuity: '20/160', metric: '6/48'   , size: 54   },
+  { chars:  3, acuity: '20/125', metric: '6/38'   , size: 44   },
+  { chars:  4, acuity: '20/100', metric: '6/30'   , size: 36   },
+  { chars:  5, acuity: '20/80' , metric: '6/24'   , size: 30   },
+  { chars:  6, acuity: '20/63' , metric: '6/19'   , size: 25   },
+  { chars:  7, acuity: '20/50' , metric: '6/15'   , size: 21   },
+  { chars:  8, acuity: '20/40' , metric: '6/12'   , size: 18   },
+  { chars:  9, acuity: '20/32' , metric: '6/9.6'  , size: 15   },
+  { chars: 10, acuity: '20/25' , metric: '6/7.5'  , size: 13   },
+  { chars: 12, acuity: '20/20' , metric: '6/6'    , size: 11   },
+];
+
+const PARA_ROW = { acuity: '20/10', metric: '6/3', size: 8 };
+
+/* ── Font choices ─────────────────────────────────── */
+
+const FONTS = [
+  { label: 'Courier Prime',     value: "'Courier Prime', Courier, monospace"    },
+  { label: 'Space Mono',        value: "'Space Mono', monospace"                },
+  { label: 'Inconsolata',       value: "'Inconsolata', monospace"               },
+  { label: 'Special Elite',     value: "'Special Elite', cursive"               },
+  { label: 'Share Tech Mono',   value: "'Share Tech Mono', monospace"           },
+  { label: 'DM Mono',           value: "'DM Mono', monospace"                   },
+  { label: 'Playfair Display',  value: "'Playfair Display', Georgia, serif"     },
+  { label: 'Libre Baskerville', value: "'Libre Baskerville', Georgia, serif"    },
+];
+
+/* ── Bootstrap font selector ──────────────────────── */
+
+const fontSelect = document.getElementById('fontSelect');
+FONTS.forEach(({ label, value }, i) => {
+  const opt = document.createElement('option');
+  opt.value = value;
+  opt.textContent = label;
+  if (i === 0) opt.selected = true;
+  fontSelect.appendChild(opt);
+});
+
+/* ── Text → chart data ────────────────────────────── */
+
+function buildChart(raw) {
+  // Collapse whitespace runs, trim
+  const text = raw.replace(/\s+/g, ' ').trim();
+  if (!text) return null;
+
+  let cursor = 0;
+  const lineRows = [];
+
+  for (const def of LINE_ROWS) {
+    if (cursor >= text.length) break;
+
+    // Skip leading space
+    if (text[cursor] === ' ') cursor++;
+    if (cursor >= text.length) break;
+
+    // Slice N chars
+    const end = Math.min(cursor + def.chars, text.length);
+    let slice = text.slice(cursor, end);
+
+    // Trim trailing space (consume it so next row won't start with one)
+    slice = slice.trimEnd();
+    cursor = end; // advance past full slice (any trailing space is consumed)
+
+    if (slice.length > 0) {
+      lineRows.push({ ...def, text: slice });
+    }
+  }
+
+  // Skip leading space before paragraph
+  if (cursor < text.length && text[cursor] === ' ') cursor++;
+
+  const paraText = cursor < text.length ? text.slice(cursor) : '';
+
+  return { lineRows, paraText };
+}
+
+/* ── HTML escaping ────────────────────────────────── */
+
+function esc(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ── Render ───────────────────────────────────────── */
+
+function render() {
+  const raw    = document.getElementById('narrative').value;
+  const font   = fontSelect.value;
+  const output = document.getElementById('output');
+  const chart  = buildChart(raw);
+
+  if (!chart) {
+    output.innerHTML = '';
+    output.classList.add('is-empty');
+    return;
+  }
+
+  output.classList.remove('is-empty');
+
+  const { lineRows, paraText } = chart;
+
+  const lineHTML = lineRows.map(row => `
+    <div class="chart-row">
+      <span class="acuity acuity-l">${esc(row.acuity)}</span>
+      <span class="chart-text" style="font-size:${row.size}pt">${esc(row.text)}</span>
+      <span class="acuity acuity-r">${esc(row.metric)}</span>
+    </div>
+  `).join('');
+
+  const paraHTML = paraText ? `
+    <div class="chart-row--para">
+      <span class="acuity acuity-l" style="padding-top:1pt">${esc(PARA_ROW.acuity)}</span>
+      <span class="chart-para">${esc(paraText)}</span>
+      <span class="acuity acuity-r" style="padding-top:1pt">${esc(PARA_ROW.metric)}</span>
+    </div>
+  ` : '';
+
+  output.innerHTML = `
+    <div class="chart-page" style="font-family:${font}">
+      <div class="chart-header">
+        <span class="chart-rule"></span>
+        <span class="chart-title">Visual Acuity</span>
+        <span class="chart-rule"></span>
+      </div>
+      <div class="chart-rows">
+        ${lineHTML}
+        ${paraHTML}
+      </div>
+    </div>
+  `;
+}
+
+/* ── Events ───────────────────────────────────────── */
+
+document.getElementById('narrative').addEventListener('input', render);
+fontSelect.addEventListener('change', render);
+</script>
+
+</body>
+</html>
