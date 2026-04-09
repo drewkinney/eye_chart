@@ -227,7 +227,7 @@
       letter-spacing: 0.1em;
       padding-right: 0.1em; /* optical offset */
       white-space: nowrap;
-      overflow: hidden;
+      overflow: visible;
     }
 
     /* Paragraph row — last row */
@@ -317,18 +317,22 @@
    Final row:  paragraph — all remaining text at fine-print scale
 ───────────────────────────────────────────────────── */
 
+// Char counts are calibrated so each row's natural rendered width
+// (chars × font-size × ~0.7em for monospace + 0.1em letter-spacing)
+// grows proportionally toward the full content width (~420pt),
+// forming a true pyramid. Row 11 reaches margin-to-margin.
 const LINE_ROWS = [
-  { chars:  1, acuity: '20/200', metric: '6/60'   , size: 72   },
-  { chars:  2, acuity: '20/160', metric: '6/48'   , size: 54   },
-  { chars:  3, acuity: '20/125', metric: '6/38'   , size: 44   },
-  { chars:  4, acuity: '20/100', metric: '6/30'   , size: 36   },
-  { chars:  5, acuity: '20/80' , metric: '6/24'   , size: 30   },
-  { chars:  6, acuity: '20/63' , metric: '6/19'   , size: 25   },
-  { chars:  7, acuity: '20/50' , metric: '6/15'   , size: 21   },
-  { chars:  8, acuity: '20/40' , metric: '6/12'   , size: 18   },
-  { chars:  9, acuity: '20/32' , metric: '6/9.6'  , size: 15   },
-  { chars: 10, acuity: '20/25' , metric: '6/7.5'  , size: 13   },
-  { chars: 12, acuity: '20/20' , metric: '6/6'    , size: 11   },
+  { chars:  1, acuity: '20/200', metric: '6/60'  , size: 72 },  //  ~12% width
+  { chars:  2, acuity: '20/160', metric: '6/48'  , size: 54 },  //  ~18%
+  { chars:  4, acuity: '20/125', metric: '6/38'  , size: 44 },  //  ~29%
+  { chars:  6, acuity: '20/100', metric: '6/30'  , size: 36 },  //  ~36%
+  { chars:  9, acuity: '20/80' , metric: '6/24'  , size: 30 },  //  ~45%
+  { chars: 13, acuity: '20/63' , metric: '6/19'  , size: 25 },  //  ~54%
+  { chars: 18, acuity: '20/50' , metric: '6/15'  , size: 21 },  //  ~63%
+  { chars: 24, acuity: '20/40' , metric: '6/12'  , size: 18 },  //  ~72%
+  { chars: 33, acuity: '20/32' , metric: '6/9.6' , size: 15 },  //  ~83%
+  { chars: 42, acuity: '20/25' , metric: '6/7.5' , size: 13 },  //  ~91%
+  { chars: 55, acuity: '20/20' , metric: '6/6'   , size: 11 },  // ~101% → margin-to-margin
 ];
 
 const PARA_ROW = { acuity: '20/10', metric: '6/3', size: 8 };
