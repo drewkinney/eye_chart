@@ -6,61 +6,103 @@
   <title>Eye Chart — Visual Acuity</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inconsolata:wght@400;700&family=Special+Elite&family=Share+Tech+Mono&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap">
   <style>
 
-    /* ── Reset ─────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Tokens ────────────────────────────── */
     :root {
       --ink:            #1A1A18;
       --paper:          #F9F7F4;
+      --bg:             #282826;
       --chrome-bg:      #131311;
       --chrome-surface: #1E1E1C;
       --chrome-border:  #2E2E2C;
       --chrome-text:    #C8C8C4;
-      --chrome-muted:   #606060;
+      --chrome-muted:   #585856;
     }
 
-    /* ── Body ──────────────────────────────── */
     body {
-      background: #282826;
+      background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
       min-height: 100vh;
     }
 
-    /* ── Controls (screen only) ────────────── */
-    .controls {
+    /* ── Speech bubble toggle ──────────────────────────── */
+
+    .overlay-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 400;
+      width: 42px;
+      height: 42px;
       background: var(--chrome-bg);
-      border-bottom: 1px solid var(--chrome-border);
-      padding: 18px 24px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      border: 1px solid var(--chrome-border);
+      color: var(--chrome-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s;
     }
 
-    .controls-inner {
-      max-width: 840px;
-      margin: 0 auto;
+    .overlay-btn:hover { color: var(--chrome-text); border-color: #484846; }
+
+    .overlay-btn svg { width: 18px; height: 18px; }
+
+    .overlay-btn.is-active { color: var(--paper); border-color: #585856; }
+
+    /* ── Overlay backdrop ──────────────────────────────── */
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s;
     }
 
-    .controls-eyebrow {
+    .overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ── Overlay card ──────────────────────────────────── */
+
+    .overlay-card {
+      background: var(--chrome-bg);
+      border: 1px solid var(--chrome-border);
+      width: 620px;
+      max-width: calc(100vw - 40px);
+      padding: 22px 22px 16px;
+      transform: translateY(10px);
+      transition: transform 0.18s;
+    }
+
+    .overlay.is-open .overlay-card { transform: translateY(0); }
+
+    .overlay-eyebrow {
       display: block;
       color: var(--chrome-muted);
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 500;
-      letter-spacing: 0.32em;
+      letter-spacing: 0.35em;
       text-transform: uppercase;
-      margin-bottom: 9px;
+      margin-bottom: 10px;
     }
 
     textarea {
       display: block;
       width: 100%;
-      min-height: 80px;
-      max-height: 180px;
+      min-height: 100px;
+      max-height: 220px;
       background: var(--chrome-surface);
       color: var(--chrome-text);
       border: 1px solid var(--chrome-border);
@@ -73,44 +115,97 @@
     }
 
     textarea:focus { border-color: #484846; }
-
     textarea::placeholder { color: var(--chrome-muted); }
 
-    .control-bar {
+    .overlay-footer {
       display: flex;
       align-items: center;
-      gap: 18px;
-      margin-top: 9px;
-      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
     }
 
-    .control-group {
+    /* ── Font picker ───────────────────────────────────── */
+
+    .font-picker { position: relative; }
+
+    .fp-btn {
       display: flex;
       align-items: center;
-      gap: 7px;
-    }
-
-    .control-group label {
-      color: var(--chrome-muted);
-      font-size: 8.5px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
-
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      background: var(--chrome-surface)
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23606060'/%3E%3C/svg%3E")
-        no-repeat right 9px center;
+      gap: 8px;
+      background: var(--chrome-surface);
       color: var(--chrome-text);
       border: 1px solid var(--chrome-border);
-      padding: 5px 28px 5px 9px;
-      font-size: 12px;
+      padding: 6px 10px 6px 12px;
+      font-size: 13px;
       cursor: pointer;
+      min-width: 172px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .fp-btn:hover { border-color: #484846; }
+
+    .fp-btn-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fp-btn svg { flex-shrink: 0; opacity: 0.5; }
+
+    .fp-drop {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 0;
+      z-index: 500;
+      background: var(--chrome-bg);
+      border: 1px solid var(--chrome-border);
+      width: 240px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+    }
+
+    .fp-drop[hidden] { display: none; }
+
+    .fp-search {
+      display: block;
+      width: 100%;
+      background: var(--chrome-surface);
+      color: var(--chrome-text);
+      border: none;
+      border-bottom: 1px solid var(--chrome-border);
+      padding: 8px 10px;
+      font-size: 12px;
       outline: none;
     }
+
+    .fp-search::placeholder { color: var(--chrome-muted); }
+
+    .fp-list {
+      overflow-y: auto;
+      max-height: 260px;
+      overscroll-behavior: contain;
+    }
+
+    .fp-item {
+      padding: 7px 12px;
+      font-size: 15px;
+      color: var(--chrome-text);
+      cursor: pointer;
+      line-height: 1.25;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      opacity: 0.35;
+      transition: opacity 0.25s, background 0.1s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fp-item:hover  { background: var(--chrome-surface); }
+    .fp-item.loaded { opacity: 1; }
+    .fp-item.active { color: var(--paper); opacity: 1; }
+
+    /* ── Print button ──────────────────────────────────── */
 
     .btn-print {
       margin-left: auto;
@@ -119,17 +214,19 @@
       border: none;
       padding: 7px 16px;
       font-family: inherit;
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 600;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
       cursor: pointer;
       transition: opacity 0.12s;
+      white-space: nowrap;
     }
 
     .btn-print:hover { opacity: 0.78; }
 
-    /* ── Output wrapper ────────────────────── */
+    /* ── Output wrapper ────────────────────────────────── */
+
     #output {
       padding: 44px 24px 80px;
       display: flex;
@@ -139,27 +236,27 @@
     }
 
     #output.is-empty::after {
-      content: 'Paste a narrative above to generate the chart.';
+      content: 'Open the editor to paste a narrative.';
       display: block;
       color: #3A3A38;
       font-size: 11px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      margin-top: 72px;
+      margin-top: 80px;
     }
 
-    /* ── Chart page ────────────────────────── */
+    /* ── Chart page ────────────────────────────────────── */
+
     .chart-page {
-      width: 816px;     /* 8.5 in @ 96 dpi */
-      min-height: 1056px; /* 11 in @ 96 dpi */
+      width: 816px;
+      min-height: 1056px;
       background: var(--paper);
-      padding: 72px;    /* 0.75 in @ 96 dpi */
+      padding: 72px;
       box-shadow: 0 6px 48px rgba(0,0,0,0.55);
       display: flex;
       flex-direction: column;
     }
 
-    /* Header */
     .chart-header {
       display: flex;
       align-items: center;
@@ -183,17 +280,15 @@
       color: var(--ink);
       opacity: 0.3;
       white-space: nowrap;
-      padding-right: 0.5em; /* offset letter-spacing on last char */
+      padding-right: 0.5em;
     }
 
-    /* Rows */
     .chart-rows {
       flex: 1;
       display: flex;
       flex-direction: column;
     }
 
-    /* Single-line rows */
     .chart-row {
       display: grid;
       grid-template-columns: 42pt 1fr 42pt;
@@ -217,7 +312,7 @@
     }
 
     .acuity-l { text-align: right; padding-right: 9pt; }
-    .acuity-r { text-align: left;  padding-left: 9pt;  }
+    .acuity-r { text-align: left;  padding-left:  9pt; }
 
     .chart-text {
       display: block;
@@ -225,42 +320,20 @@
       color: var(--ink);
       line-height: 1.1;
       letter-spacing: 0.1em;
-      padding-right: 0.1em; /* optical offset */
+      padding-right: 0.1em;
       white-space: nowrap;
       overflow: visible;
     }
 
-    /* Paragraph row — last row */
-    .chart-row--para {
-      display: grid;
-      grid-template-columns: 42pt 1fr 42pt;
-      align-items: start;
-      padding: 8pt 0 0;
-      margin-top: 6pt;
-      border-top: 0.5pt solid rgba(26,26,24,0.15);
-    }
+    /* ── Print ─────────────────────────────────────────── */
 
-    .chart-para {
-      display: block;
-      text-align: justify;
-      color: var(--ink);
-      font-size: 8pt;
-      line-height: 1.5;
-      letter-spacing: 0.01em;
-      hyphens: auto;
-      overflow-wrap: break-word;
-    }
-
-    /* ── Print ─────────────────────────────── */
     @media print {
       .no-print { display: none !important; }
+      .overlay-btn { display: none !important; }
 
       body { background: white; }
 
-      #output {
-        padding: 0;
-        gap: 0;
-      }
+      #output { padding: 0; gap: 0; }
 
       .chart-page {
         width: 100%;
@@ -276,192 +349,489 @@
         page-break-after: avoid;
       }
 
-      @page {
-        size: letter portrait;
-        margin: 0.75in;
-      }
+      @page { size: letter portrait; margin: 0.75in; }
     }
 
   </style>
 </head>
 <body>
 
-<!-- ── Controls ─────────────────────────────────────── -->
-<div class="controls no-print">
-  <div class="controls-inner">
-    <span class="controls-eyebrow">Eye Chart — Narrative to Visual Acuity</span>
+<!-- ── Speech bubble toggle ─────────────────────────────── -->
+<button class="overlay-btn no-print" id="overlayBtn" aria-label="Edit narrative">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+</button>
+
+<!-- ── Input overlay ─────────────────────────────────────── -->
+<div class="overlay no-print" id="overlay">
+  <div class="overlay-card" id="overlayCard">
+    <span class="overlay-eyebrow">Narrative → Visual Acuity</span>
     <textarea
       id="narrative"
-      placeholder="Paste your narrative here. Characters flow from the largest line down; the remaining text becomes the final paragraph."
+      placeholder="Paste your narrative here. Characters flow from the largest line down, receding to invisibility."
       spellcheck="false"
       lang="en"
     ></textarea>
-    <div class="control-bar">
-      <div class="control-group">
-        <label for="fontSelect">Typeface</label>
-        <select id="fontSelect"></select>
+    <div class="overlay-footer">
+      <div class="font-picker" id="fontPicker">
+        <button class="fp-btn" id="fpBtn" type="button">
+          <span class="fp-btn-label" id="fpLabel">Courier Prime</span>
+          <svg width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
+            <path d="M0 0l4 5 4-5z"/>
+          </svg>
+        </button>
+        <div class="fp-drop" id="fpDrop" hidden>
+          <input class="fp-search" id="fpSearch" placeholder="Search fonts…" autocomplete="off" spellcheck="false">
+          <div class="fp-list" id="fpList"></div>
+        </div>
       </div>
       <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
     </div>
   </div>
 </div>
 
-<!-- ── Chart output ──────────────────────────────────── -->
+<!-- ── Chart output ──────────────────────────────────────── -->
 <div id="output" class="is-empty"></div>
 
 <script>
 'use strict';
 
-/* ── Chart structure ──────────────────────────────────
-   Rows 1–11: single centered lines (increasing char count)
-   Final row:  paragraph — all remaining text at fine-print scale
-───────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   CHART ROWS
+   Rows 1–11: pyramid (1 char → margin-to-margin at row 11)
+   Rows 12–20: type recedes toward invisibility (2pt)
+   Char counts calibrated: chars × size × 0.7em ≈ 420pt
+══════════════════════════════════════════════════════════ */
 
-// Char counts are calibrated so each row's natural rendered width
-// (chars × font-size × ~0.7em for monospace + 0.1em letter-spacing)
-// grows proportionally toward the full content width (~420pt),
-// forming a true pyramid. Row 11 reaches margin-to-margin.
 const LINE_ROWS = [
-  { chars:  1, acuity: '20/200', metric: '6/60'  , size: 72 },  //  ~12% width
-  { chars:  2, acuity: '20/160', metric: '6/48'  , size: 54 },  //  ~18%
-  { chars:  4, acuity: '20/125', metric: '6/38'  , size: 44 },  //  ~29%
-  { chars:  6, acuity: '20/100', metric: '6/30'  , size: 36 },  //  ~36%
-  { chars:  9, acuity: '20/80' , metric: '6/24'  , size: 30 },  //  ~45%
-  { chars: 13, acuity: '20/63' , metric: '6/19'  , size: 25 },  //  ~54%
-  { chars: 18, acuity: '20/50' , metric: '6/15'  , size: 21 },  //  ~63%
-  { chars: 24, acuity: '20/40' , metric: '6/12'  , size: 18 },  //  ~72%
-  { chars: 33, acuity: '20/32' , metric: '6/9.6' , size: 15 },  //  ~83%
-  { chars: 42, acuity: '20/25' , metric: '6/7.5' , size: 13 },  //  ~91%
-  { chars: 55, acuity: '20/20' , metric: '6/6'   , size: 11 },  // ~101% → margin-to-margin
+  { chars:   1, acuity: '20/200', metric: '6/60',   size: 72 },
+  { chars:   2, acuity: '20/160', metric: '6/48',   size: 54 },
+  { chars:   4, acuity: '20/125', metric: '6/38',   size: 44 },
+  { chars:   6, acuity: '20/100', metric: '6/30',   size: 36 },
+  { chars:   9, acuity: '20/80',  metric: '6/24',   size: 30 },
+  { chars:  13, acuity: '20/63',  metric: '6/19',   size: 25 },
+  { chars:  18, acuity: '20/50',  metric: '6/15',   size: 21 },
+  { chars:  24, acuity: '20/40',  metric: '6/12',   size: 18 },
+  { chars:  33, acuity: '20/32',  metric: '6/9.6',  size: 15 },
+  { chars:  42, acuity: '20/25',  metric: '6/7.5',  size: 13 },
+  { chars:  55, acuity: '20/20',  metric: '6/6',    size: 11 },
+  { chars:  60, acuity: '20/16',  metric: '6/4.8',  size: 10 },
+  { chars:  67, acuity: '20/12',  metric: '6/3.6',  size:  9 },
+  { chars:  75, acuity: '20/10',  metric: '6/3',    size:  8 },
+  { chars:  86, acuity: '20/8',   metric: '6/2.4',  size:  7 },
+  { chars: 100, acuity: '20/6',   metric: '6/1.8',  size:  6 },
+  { chars: 120, acuity: '20/5',   metric: '6/1.5',  size:  5 },
+  { chars: 150, acuity: '20/4',   metric: '6/1.2',  size:  4 },
+  { chars: 200, acuity: '20/3',   metric: '6/0.9',  size:  3 },
+  { chars: 300, acuity: '20/2',   metric: '6/0.6',  size:  2 },
 ];
 
-const PARA_ROW = { acuity: '20/10', metric: '6/3', size: 8 };
+/* ══════════════════════════════════════════════════════════
+   GOOGLE FONTS — full catalog, loaded lazily on scroll
+══════════════════════════════════════════════════════════ */
 
-/* ── Font choices ─────────────────────────────────── */
-
-const FONTS = [
-  { label: 'Courier Prime',     value: "'Courier Prime', Courier, monospace"    },
-  { label: 'Space Mono',        value: "'Space Mono', monospace"                },
-  { label: 'Inconsolata',       value: "'Inconsolata', monospace"               },
-  { label: 'Special Elite',     value: "'Special Elite', cursive"               },
-  { label: 'Share Tech Mono',   value: "'Share Tech Mono', monospace"           },
-  { label: 'DM Mono',           value: "'DM Mono', monospace"                   },
-  { label: 'Playfair Display',  value: "'Playfair Display', Georgia, serif"     },
-  { label: 'Libre Baskerville', value: "'Libre Baskerville', Georgia, serif"    },
+const GOOGLE_FONTS = [
+  'ABeeZee','Abel','Abhaya Libre','Aboreto','Abril Fatface','Aclonica','Acme','Actor',
+  'Adamina','Advent Pro','Agbalumo','Agdasima','Aguafina Script','Akaya Kanadaka',
+  'Akaya Telivigala','Akronim','Akshar','Alata','Alatsi','Albert Sans','Aldrich','Alef',
+  'Alegreya','Alegreya SC','Alegreya Sans','Alegreya Sans SC','Aleo','Alex Brush',
+  'Alexandria','Alfa Slab One','Alice','Alike','Alike Angular','Allan','Allerta',
+  'Allerta Stencil','Allison','Allura','Almarai','Almendra','Almendra Display',
+  'Almendra SC','Alumni Sans','Alumni Sans Collegiate Pinstripes','Alumni Sans Inline One',
+  'Alumni Sans Pinstripe','Amarante','Amaranth','Amatic SC','Amethysta','Amiko','Amiri',
+  'Amiri Quran','Amita','Anaheim','Andada Pro','Andika','Annie Use Your Telescope',
+  'Anonymous Pro','Antic','Antic Didone','Antic Slab','Anton','Anton SC','Antonio',
+  'Anybody','Aoboshi One','Arapey','Arbutus','Arbutus Slab','Architects Daughter',
+  'Archivo','Archivo Black','Archivo Narrow','Are You Serious','Aref Ruqaa',
+  'Aref Ruqaa Ink','Arima','Arimo','Arizonia','Armata','Arsenal','Artifika','Arvo',
+  'Arya','Asap','Asap Condensed','Asar','Asset','Assistant','Astloch','Asul','Athiti',
+  'Atkinson Hyperlegible','Atma','Atomic Age','Aubrey','Audiowide','Autour One',
+  'Average','Average Sans','Averia Gruesa Libre','Averia Libre','Averia Sans Libre',
+  'Averia Serif Libre','Azeret Mono',
+  'B612','B612 Mono','BIZ UDGothic','BIZ UDMincho','BIZ UDPGothic','BIZ UDPMincho',
+  'Babylonica','Bacasime Antique','Bad Script','Bagel Fat One','Bahiana','Bahianita',
+  'Bai Jamjuree','Bakbak One','Ballet','Baloo 2','Baloo Bhai 2','Baloo Bhaijaan 2',
+  'Baloo Bhaina 2','Baloo Chettan 2','Baloo Da 2','Baloo Paaji 2','Baloo Tamma 2',
+  'Baloo Tammudu 2','Baloo Thambi 2','Balsamiq Sans','Balthazar','Bangers','Barlow',
+  'Barlow Condensed','Barlow Semi Condensed','Barriecito','Barrio','Basic','Baskervville',
+  'Baumans','Bayon','Be Vietnam Pro','Beau Rivage','Bebas Neue','Belanosima','Bellefair',
+  'Belleza','Bellota','Benchnine','Benne','Bentham','Berkshire Swash','Beth Ellen',
+  'Bevan','BioRhyme','BioRhyme Expanded','Birthstone','Birthstone Bounce','Biryani',
+  'Bitter','Black And White Picture','Black Han Sans','Black Ops One','Blaka',
+  'Blaka Hollow','Blaka Ink','Blinker','Bodoni Moda','Bokor','Boogaloo','Borel',
+  'Bowlby One','Bowlby One SC','Brawler','Bree Serif','Brygada 1918','Bubblegum Sans',
+  'Bubbler One','Buda','Buenard','Bungee','Bungee Hairline','Bungee Inline',
+  'Bungee Outline','Bungee Shade','Bungee Spice','Butcherman','Butterfly Kids',
+  'Cabin','Cabin Condensed','Cabin Sketch','Caesar Dressing','Cagliostro','Cairo',
+  'Cairo Play','Caladea','Calistoga','Calligraffitti','Cambay','Cambo','Candal',
+  'Cantarell','Cantata One','Cantora One','Caprasimo','Capriola','Caramel','Carattere',
+  'Cardo','Carme','Carrois Gothic','Carrois Gothic SC','Carter One','Castoro',
+  'Castoro Oldstyle','Catamaran','Caudex','Caveat','Caveat Brush','Cedarville Cursive',
+  'Ceviche One','Chakra Petch','Changa','Changa One','Chango','Charis SIL','Charm',
+  'Charmonman','Chathura','Chau Philomene One','Chela One','Chelsea Market',
+  'Cherry Bomb One','Cherry Cream Soda','Cherry Swash','Chewy','Chicle','Chilanka',
+  'Chivo','Chivo Mono','Cinzel','Cinzel Decorative','Clicker Script','Climate Crisis',
+  'Coda','Codystar','Coiny','Combo','Comfortaa','Comforter','Comforter Brush',
+  'Comic Neue','Coming Soon','Commissioner','Concert One','Condiment','Content',
+  'Contrail One','Convergence','Cookie','Copse','Corben','Corinthia','Cormorant',
+  'Cormorant Garamond','Cormorant Infant','Cormorant SC','Cormorant Unicase',
+  'Cormorant Upright','Courgette','Courier Prime','Coustard','Covered By Your Grace',
+  'Crafty Girls','Creepster','Crete Round','Crimson Pro','Crimson Text','Croissant One',
+  'Crushed','Cuprum','Cute Font','Cutive','Cutive Mono',
+  'DM Mono','DM Sans','DM Serif Display','DM Serif Text','Damion','Dancing Script',
+  'Danfo','Darumadrop One','David Libre','Dawning of a New Day','Days One','Dekko',
+  'Dela Gothic One','Delicious Handrawn','Delius','Delius Swash Caps','Delius Unicase',
+  'Della Respira','Denk One','Devonshire','Dhurjati','Didact Gothic','Diplomata',
+  'Diplomata SC','Do Hyeon','Dokdo','Domine','Donegal One','Dongle','Doppio One',
+  'Dorsa','Doto','Duru Sans','DynaPuff',
+  'EB Garamond','Eagle Lake','East Sea Dokdo','Eater','Edu NSW ACT Foundation',
+  'Edu QLD Beginner','Edu SA Beginner','Edu TAS Beginner','Edu VIC WA NT Beginner',
+  'El Messiri','Electrolize','Elsie','Elsie Swash Caps','Emblema One','Emilys Candy',
+  'Encode Sans','Encode Sans Condensed','Encode Sans Expanded','Encode Sans SC',
+  'Encode Sans Semi Condensed','Encode Sans Semi Expanded','Engagement','Englebert',
+  'Enriqueta','Ephesis','Epilogue','Erica One','Esteban','Estonia','Euphoria Script',
+  'Ewert','Exo','Exo 2','Expletus Sans','Explora',
+  'Fahkwang','Familjen Grotesk','Fanwood Text','Farro','Farsan','Fascinate',
+  'Fascinate Inline','Faster One','Fauna One','Faustina','Federo','Felipa','Fenix',
+  'Festive','Figtree','Finger Paint','Finlandica','Fira Code','Fira Mono','Fira Sans',
+  'Fira Sans Condensed','Fira Sans Extra Condensed','Fjalla One','Fjord One','Flamenco',
+  'Flavors','Fleur De Leah','Foldit','Fondamento','Fontdiner Swanky','Forum',
+  'Fragment Mono','Francois One','Frank Ruhl Libre','Fraunces','Freckle Face',
+  'Fredericka the Great','Fredoka','Freehand','Fresca','Frijole','Fruktur','Fugaz One',
+  'GFS Didot','GFS Neohellenic','Gabriela','Gaegu','Gafata','Galada','Galdeano',
+  'Galindo','Gamja Flower','Gantari','Gasoek One','Gayathri','Gelasio','Gemunu Libre',
+  'Genos','Gentium Book Plus','Geo','Georama','Geostar','Geostar Fill','Germania One',
+  'Gideon Roman','Gidugu','Gilda Display','Girassol','Give You Glory','Glass Antiqua',
+  'Glegoo','Gloock','Gloria Hallelujah','Gluten','Goblin One','Gochi Hand','Goldman',
+  'Golos Text','Gorditas','Gothic A1','Gotu','Goudy Bookletter 1911','Graduate',
+  'Grand Hotel','Grandiflora One','Grandstander','Gravitas One','Great Vibes',
+  'Grechen Fuemen','Grenze','Grenze Gotisch','Grey Qo','Griffy','Gruppo','Gudea',
+  'Gugi','Gupter','Gwendolyn',
+  'Habibi','Hachi Maru Pop','Hahmlet','Halant','Hammersmith One','Hanalei',
+  'Hanalei Fill','Handjet','Handlee','Hanken Grotesk','Happy Monkey','Harmattan',
+  'Headland One','Hedvig Letters Sans','Hedvig Letters Serif','Heebo','Henny Penny',
+  'Hepta Slab','Herr Von Muellerhoff','Hi Melody','Holtwood One SC','Homemade Apple',
+  'Homenaje','Hubballi','Hurricane',
+  'IBM Plex Mono','IBM Plex Sans','IBM Plex Sans Condensed','IBM Plex Serif',
+  'IM Fell DW Pica','IM Fell DW Pica SC','IM Fell Double Pica','IM Fell Double Pica SC',
+  'IM Fell English','IM Fell English SC','IM Fell French Canon','IM Fell French Canon SC',
+  'IM Fell Great Primer','IM Fell Great Primer SC','Ibarra Real Nova','Iceberg',
+  'Iceland','Imbue','Imperial Script','Imprima','Inconsolata','Inder','Indie Flower',
+  'Ingrid Darling','Inspiration','Instrument Sans','Instrument Serif','Inter',
+  'Inter Tight','Irish Grover','Island Moments','Istok Web','Italiana','Italianno','Itim',
+  'Jacques Francois','Jacques Francois Shadow','Jaldi','Jaro','JetBrains Mono','Joan',
+  'Jockey One','Jolly Lodger','Jomhuria','Josefin Sans','Josefin Slab','Jost',
+  'Joti One','Jua','Judson','Julee','Julius Sans One','Junge','Jura',
+  'K2D','Kablammo','Kadwa','Kaisei Decol','Kaisei HarunoUmi','Kaisei Opti',
+  'Kaisei Tokumin','Kalam','Kameron','Kanit','Kantumruy Pro','Karma','Katibeh',
+  'Kaushan Script','Kavivanar','Kavoon','Keania One','Kelly Slab','Khand',
+  'Kirang Haerang','Kite One','Kiwi Maru','Klee One','Knewave','KoHo','Kodchasan',
+  'Koh Santepheap','Kolker Brush','Kosugi','Kosugi Maru','Kotta One','Koulen','Kreon',
+  'Kristi','Krona One','Kumar One','Kumar One Outline','Kumbh Sans','Kurale',
+  'Lacquer','Laila','Lakki Reddy','Lalezar','Lancelot','Langar','Lato',
+  'Lavishly Yours','League Gothic','League Spartan','Leckerli One','Ledger','Lekton',
+  'Lemon','Lemon Yellow Sun','Lexend','Lexend Deca','Lexend Exa','Lexend Giga',
+  'Lexend Mega','Lexend Peta','Lexend Tera','Lexend Zetta','Libre Baskerville',
+  'Libre Caslon Display','Libre Caslon Text','Libre Franklin','Licorice','Life Savers',
+  'Lilita One','Lily Script One','Limelight','Linden Hill','Literata','Liu Jian Mao Cao',
+  'Livvic','Lobster','Lobster Two','Londrina Outline','Londrina Shadow',
+  'Londrina Sketch','Londrina Solid','Long Cang','Lora','Love Light',
+  'Love Ya Like A Sister','Loved by the King','Lovers Quarrel','Luckiest Guy',
+  'Lusitana','Lustria','Luxurious Roman','Luxurious Script',
+  'M PLUS 1','M PLUS 1 Code','M PLUS 2','M PLUS Code Latin','M PLUS Rounded 1c',
+  'Ma Shan Zheng','Macondo','Macondo Swash Caps','Mada','Magra','Maiden Orange',
+  'Maitree','Major Mono Display','Mako','Mali','Mallanna','Mandali','Manjari','Manrope',
+  'Mansalva','Marcellus','Marcellus SC','Marck Script','Margarine','Marhey',
+  'Markazi Text','Marko One','Marmelad','Martel','Martel Sans','Marvel','Mate','Mate SC',
+  'Maven Pro','McLaren','Mea Culpa','Meddon','Medula One','Meera Inimai','Merienda',
+  'Merriweather','Merriweather Sans','Metal','Metal Mania','Metamorphous','Metrophobic',
+  'Michroma','Milonga','Miltonian','Miltonian Tattoo','Mina','Mingzat','Miniver',
+  'Miriam Libre','Mirza','Miss Fajardose','Modak','Modern Antiqua','Mogra','Mohave',
+  'Moirai One','Molengo','Mooli','Moon Dance','Moul','Moulpali','Mountains of Christmas',
+  'Mouse Memoirs','Mr Bedfort','Mr Dafoe','Mr De Haviland','Mrs Saint Delafield',
+  'Mrs Sheppards','Mukta','Mukta Mahee','Mukta Malar','Mukta Vaani','MuseoModerno',
+  'NTR','Nabla','Nanum Brush Script','Nanum Gothic','Nanum Gothic Coding',
+  'Nanum Myeongjo','Nanum Pen Script','Noto Color Emoji','Noto Sans','Noto Serif',
+  'Nunito','Nunito Sans',
+  'Ojuju','Old Standard TT','Oleo Script','Oleo Script Swash Caps','Oooh Baby',
+  'Open Sans','Oranienbaum','Orbit','Orbitron','Oregano','Orelega One',
+  'Original Surfer','Oswald','Outfit','Overlock','Overlock SC','Overpass',
+  'Overpass Mono','Ovo','Oxanium','Oxygen','Oxygen Mono',
+  'PT Mono','PT Sans','PT Sans Caption','PT Sans Narrow','PT Serif','PT Serif Caption',
+  'Pacifico','Padauk','Palanquin','Palanquin Dark','Pangolin','Paprika','Parisienne',
+  'Passero One','Passion One','Passions Conflict','Pathway Extreme','Pathway Gothic One',
+  'Patrick Hand','Patrick Hand SC','Pattaya','Patua One','Pavanam','Paytone One',
+  'Peddana','Peralta','Permanent Marker','Petit Formal Script','Petrona','Philosopher',
+  'Piazzolla','Piedra','Pinyon Script','Pirata One','Pixelify Sans','Plaster','Play',
+  'Playball','Playfair Display','Playfair Display SC','Playpen Sans','Plus Jakarta Sans',
+  'Podkova','Poiret One','Poller One','Poltawski Nowy','Pompiere','Pontano Sans',
+  'Poor Story','Poppins','Port Lligat Sans','Port Lligat Slab','Potta One',
+  'Pragati Narrow','Praise','Prata','Press Start 2P','Pridi','Princess Sofia','Prompt',
+  'Prosto One','Proza Libre','Public Sans',
+  'Quantico','Quattrocento','Quattrocento Sans','Questrial','Quicksand','Quintessential',
+  'Qwitcher Grypen',
+  'Racing Sans One','Radio Canada','Rajdhani','Rakkas','Raleway','Raleway Dots',
+  'Ramabhadra','Ramaraja','Rambla','Rammetto One','Rampart One','Ranchers','Rancho',
+  'Ranga','Rasa','Rationale','Readex Pro','Recursive','Red Hat Display','Red Hat Mono',
+  'Red Hat Text','Red Rose','Reem Kufi','Reem Kufi Fun','Reem Kufi Ink','Reenie Beanie',
+  'Reggae One','Rethink Sans','Revalia','Rhodium Libre','Ribeye','Ribeye Marrow',
+  'Righteous','Risque','Road Rage','Roboto','Roboto Condensed','Roboto Flex',
+  'Roboto Mono','Roboto Serif','Roboto Slab','Rochester','Rock 3D','Rock Salt',
+  'RocknRoll One','Rokkitt','Romanesco','Ropa Sans','Rosario','Rosarivo','Rouge Script',
+  'Rowdies','Rozha One','Rubik','Rubik 80s Fade','Rubik Beastly','Rubik Broken Fax',
+  'Rubik Bubbles','Rubik Burned','Rubik Dirt','Rubik Distressed','Rubik Doodle Shadow',
+  'Rubik Doodle Triangles','Rubik Gemstones','Rubik Glitch','Rubik Iso','Rubik Lines',
+  'Rubik Maps','Rubik Marker Hatch','Rubik Maze','Rubik Microbe','Rubik Mono One',
+  'Rubik Moonrocks','Rubik One','Rubik Pixels','Rubik Puddles','Rubik Scribble',
+  'Rubik Spray Paint','Rubik Storm','Rubik Vinyl','Rubik Wet Paint','Ruda','Rufina',
+  'Ruge Boogie','Ruluko','Rum Raisin','Ruslan Display','Russo One',
+  'Sacramento','Sahitya','Sail','Saira','Saira Condensed','Saira Extra Condensed',
+  'Saira Semi Condensed','Saira Stencil One','Salsa','Sanchez','Sancreek','Sansita',
+  'Sansita Swashed','Sarabun','Sarala','Sarina','Sarpanch','Sassy Frass','Satisfy',
+  'Sawarabi Gothic','Sawarabi Mincho','Scada','Scheherazade New','Schibsted Grotesk',
+  'Schoolbell','Scope One','Seaweed Script','Secular One','Sedgwick Ave',
+  'Sedgwick Ave Display','Sen','Send Flowers','Sevillana','Seymour One','Shanti',
+  'Share','Share Tech','Share Tech Mono','Shippori Antique','Shippori Antique B1',
+  'Shippori Mincho','Shippori Mincho B1','Shizuru','Shrikhand','Sigmar','Sigmar One',
+  'Signika','Signika Negative','Simonetta','Single Day','Sintony','Sirin Stencil',
+  'Six Caps','Sixtyfour','Slabo 13px','Slabo 27px','Slackey','Smokum','Smooch',
+  'Smooch Sans','Smythe','Sniglet','Snippet','Snowburst One','Sofadi One','Sofia',
+  'Sofia Sans','Sofia Sans Condensed','Sofia Sans Extra Condensed',
+  'Sofia Sans Semi Condensed','Solitreo','Solway','Song Myung','Sono','Sonsie One',
+  'Sora','Sorts Mill Goudy','Source Code Pro','Source Sans 3','Source Serif 4',
+  'Space Grotesk','Space Mono','Special Elite','Spectral','Spectral SC','Spicy Rice',
+  'Spinnaker','Spirax','Splash','Spline Sans','Spline Sans Mono','Staatliches',
+  'Stalemate','Stalinist One','Stardos Stencil','Stick','Stick No Bills',
+  'Stint Ultra Condensed','Stint Ultra Expanded','Stoke','Stylish','Sue Ellen Francisco',
+  'Suez One','Sulphur Point','Sumana','Sunshiney','Supermercado One','Sura','Suranna',
+  'Suravaram','Suwannaphum','Swanky and Moo Moo','Syncopate',
+  'Tajawal','Tangerine','Tapestry','Tauri','Taviraj','Teko','Telex',
+  'Tenali Ramakrishna','Tenor Sans','Text Me One','Tienne','Tillana','Tilt Neon',
+  'Tilt Prism','Tilt Warp','Timmana','Tinos','Titan One','Titillium Web','Tomorrow',
+  'Tourney','Trade Winds','Train One','Trirong','Trispace','Trocchi','Trochut',
+  'Truculenta','Trykker','Tulpen One','Turret Road','Twinkle Star',
+  'Ubuntu','Ubuntu Condensed','Ubuntu Mono','Ubuntu Sans','Ubuntu Sans Mono','Uchen',
+  'Ultra','Unbounded','Uncial Antiqua','Underdog','Unica One','UnifrakturCook',
+  'UnifrakturMaguntia','Unkempt','Unlock','Unna','Urbanist',
+  'VT323','Vampiro One','Varela','Varela Round','Varta','Vesper Libre','Viaoda Libre',
+  'Vibes','Vibur','Victor Mono','Viga','Vina Sans','Vollkorn','Vollkorn SC','Voltaire',
+  'Waiting for the Sunrise','Wallpoet','Walter Turncoat','Warnes','Water Brush',
+  'Waterfall','Wellfleet','Wendy One','WindSong','Wire One','Wix Madefor Display',
+  'Wix Madefor Text','Work Sans',
+  'Xanh Mono',
+  'Yaldevi','Yanone Kaffeesatz','Yantramanav','Yatra One','Yellowtail','Yeon Sung',
+  'Yeseva One','Yesteryear','Yomogi','Young Serif','Yrsa',
+  'ZCOOL KuaiLe','ZCOOL QingKe HuangYou','ZCOOL XiaoWei','Zen Antique',
+  'Zen Antique Soft','Zen Dots','Zen Kaku Gothic Antique','Zen Kaku Gothic New',
+  'Zen Kurenaido','Zen Loop','Zen Maru Gothic','Zen Old Mincho','Zen Tokyo Zoo',
+  'Zeyada','Zhi Mang Xing','Zilla Slab','Zilla Slab Highlight',
 ];
 
-/* ── Bootstrap font selector ──────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   FONT PICKER
+══════════════════════════════════════════════════════════ */
 
-const fontSelect = document.getElementById('fontSelect');
-FONTS.forEach(({ label, value }, i) => {
-  const opt = document.createElement('option');
-  opt.value = value;
-  opt.textContent = label;
-  if (i === 0) opt.selected = true;
-  fontSelect.appendChild(opt);
+let currentFont   = "'Courier Prime', Courier, monospace";
+let currentFamily = 'Courier Prime';
+
+const fpBtn    = document.getElementById('fpBtn');
+const fpLabel  = document.getElementById('fpLabel');
+const fpDrop   = document.getElementById('fpDrop');
+const fpSearch = document.getElementById('fpSearch');
+const fpList   = document.getElementById('fpList');
+
+const loadedFonts = new Set(['Courier Prime']);
+
+function gfUrl(name) {
+  return `https://fonts.googleapis.com/css2?family=${name.replace(/ /g,'+')}:wght@400&display=swap`;
+}
+
+function loadFont(name) {
+  if (loadedFonts.has(name)) return;
+  loadedFonts.add(name);
+  const link = document.createElement('link');
+  link.rel  = 'stylesheet';
+  link.href = gfUrl(name);
+  document.head.appendChild(link);
+}
+
+/* IntersectionObserver: load font when its list item enters viewport */
+const fontObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const name = entry.target.dataset.font;
+    loadFont(name);
+    /* Mark loaded after a brief delay (CSS transition) */
+    setTimeout(() => entry.target.classList.add('loaded'), 120);
+    fontObserver.unobserve(entry.target);
+  });
+}, { root: fpList, rootMargin: '80px', threshold: 0 });
+
+function buildList(query) {
+  /* Disconnect old observations */
+  fpList.querySelectorAll('.fp-item').forEach(el => fontObserver.unobserve(el));
+  fpList.innerHTML = '';
+
+  const q = query.trim().toLowerCase();
+  const hits = q
+    ? GOOGLE_FONTS.filter(f => f.toLowerCase().includes(q))
+    : GOOGLE_FONTS;
+
+  hits.forEach(name => {
+    const el = document.createElement('div');
+    el.className   = 'fp-item' + (name === currentFamily ? ' active loaded' : '');
+    el.textContent = name;
+    el.style.fontFamily = `'${name}', sans-serif`;
+    el.dataset.font = name;
+    /* Items for already-loaded fonts are immediately visible */
+    if (loadedFonts.has(name)) el.classList.add('loaded');
+    fpList.appendChild(el);
+    fontObserver.observe(el);
+  });
+
+  fpList.scrollTop = 0;
+}
+
+/* Toggle dropdown */
+fpBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const opening = fpDrop.hidden;
+  fpDrop.hidden = !opening;
+  if (opening) {
+    fpSearch.value = '';
+    buildList('');
+    fpSearch.focus();
+    /* Scroll active item into view */
+    setTimeout(() => {
+      const active = fpList.querySelector('.active');
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    }, 0);
+  }
 });
 
-/* ── Text → chart data ────────────────────────────── */
+/* Filter on search */
+fpSearch.addEventListener('input', () => buildList(fpSearch.value));
+
+/* Select a font */
+fpList.addEventListener('click', e => {
+  const item = e.target.closest('.fp-item');
+  if (!item) return;
+  const name = item.dataset.font;
+  currentFamily = name;
+  currentFont   = `'${name}', sans-serif`;
+  fpLabel.textContent = name;
+  fpLabel.style.fontFamily = currentFont;
+  fpDrop.hidden = true;
+  render();
+});
+
+/* Close on outside click */
+document.addEventListener('click', () => { fpDrop.hidden = true; });
+fpDrop.addEventListener('click', e => e.stopPropagation());
+
+/* ══════════════════════════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════════════════════════ */
+
+const overlay    = document.getElementById('overlay');
+const overlayBtn = document.getElementById('overlayBtn');
+const overlayCard = document.getElementById('overlayCard');
+
+function openOverlay() {
+  overlay.classList.add('is-open');
+  overlayBtn.classList.add('is-active');
+  document.getElementById('narrative').focus();
+}
+
+function closeOverlay() {
+  overlay.classList.remove('is-open');
+  overlayBtn.classList.remove('is-active');
+}
+
+overlayBtn.addEventListener('click', () => {
+  overlay.classList.contains('is-open') ? closeOverlay() : openOverlay();
+});
+
+/* Click backdrop to close */
+overlay.addEventListener('click', e => {
+  if (!overlayCard.contains(e.target)) closeOverlay();
+});
+
+/* Escape to close */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!fpDrop.hidden) { fpDrop.hidden = true; return; }
+    closeOverlay();
+  }
+});
+
+/* Open on launch */
+openOverlay();
+
+/* ══════════════════════════════════════════════════════════
+   CHART LOGIC
+══════════════════════════════════════════════════════════ */
 
 function buildChart(raw) {
-  // Collapse whitespace runs, trim
   const text = raw.replace(/\s+/g, ' ').trim();
   if (!text) return null;
 
   let cursor = 0;
-  const lineRows = [];
+  const rows = [];
 
   for (const def of LINE_ROWS) {
     if (cursor >= text.length) break;
 
-    // Skip leading space
     if (text[cursor] === ' ') cursor++;
     if (cursor >= text.length) break;
 
-    // Slice N chars
-    const end = Math.min(cursor + def.chars, text.length);
-    let slice = text.slice(cursor, end);
+    const end   = Math.min(cursor + def.chars, text.length);
+    let   slice = text.slice(cursor, end).trimEnd();
+    cursor = end;
 
-    // Trim trailing space (consume it so next row won't start with one)
-    slice = slice.trimEnd();
-    cursor = end; // advance past full slice (any trailing space is consumed)
-
-    if (slice.length > 0) {
-      lineRows.push({ ...def, text: slice });
-    }
+    if (slice.length > 0) rows.push({ ...def, text: slice });
   }
 
-  // Skip leading space before paragraph
-  if (cursor < text.length && text[cursor] === ' ') cursor++;
-
-  const paraText = cursor < text.length ? text.slice(cursor) : '';
-
-  return { lineRows, paraText };
+  return rows.length ? rows : null;
 }
 
-/* ── HTML escaping ────────────────────────────────── */
-
-function esc(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-/* ── Render ───────────────────────────────────────── */
 
 function render() {
   const raw    = document.getElementById('narrative').value;
-  const font   = fontSelect.value;
   const output = document.getElementById('output');
-  const chart  = buildChart(raw);
+  const rows   = buildChart(raw);
 
-  if (!chart) {
+  if (!rows) {
     output.innerHTML = '';
     output.classList.add('is-empty');
     return;
   }
 
   output.classList.remove('is-empty');
-
-  const { lineRows, paraText } = chart;
-
-  const lineHTML = lineRows.map(row => `
-    <div class="chart-row">
-      <span class="acuity acuity-l">${esc(row.acuity)}</span>
-      <span class="chart-text" style="font-size:${row.size}pt">${esc(row.text)}</span>
-      <span class="acuity acuity-r">${esc(row.metric)}</span>
-    </div>
-  `).join('');
-
-  const paraHTML = paraText ? `
-    <div class="chart-row--para">
-      <span class="acuity acuity-l" style="padding-top:1pt">${esc(PARA_ROW.acuity)}</span>
-      <span class="chart-para">${esc(paraText)}</span>
-      <span class="acuity acuity-r" style="padding-top:1pt">${esc(PARA_ROW.metric)}</span>
-    </div>
-  ` : '';
-
   output.innerHTML = `
-    <div class="chart-page" style="font-family:${font}">
+    <div class="chart-page" style="font-family:${currentFont}">
       <div class="chart-header">
         <span class="chart-rule"></span>
         <span class="chart-title">Visual Acuity</span>
         <span class="chart-rule"></span>
       </div>
       <div class="chart-rows">
-        ${lineHTML}
-        ${paraHTML}
+        ${rows.map(r => `
+          <div class="chart-row">
+            <span class="acuity acuity-l">${esc(r.acuity)}</span>
+            <span class="chart-text" style="font-size:${r.size}pt">${esc(r.text)}</span>
+            <span class="acuity acuity-r">${esc(r.metric)}</span>
+          </div>`).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-/* ── Events ───────────────────────────────────────── */
-
 document.getElementById('narrative').addEventListener('input', render);
-fontSelect.addEventListener('change', render);
 </script>
 
 </body>
